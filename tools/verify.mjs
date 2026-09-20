@@ -370,6 +370,43 @@ try {
     check(c.size > 20, `saved copy: chart ${c.i} has data rather than empty axes`, `${c.size} bytes`);
   }
   check(snap.watermark === false, 'saved copy: no watermark on localhost', `state ${snap.licenceState}`);
+  /* ------------------------------------------------------------------ */
+  /* The main grid, specifically.                                        */
+  /* ------------------------------------------------------------------ */
+
+  /*
+   * `snap.painted` counts `[role="row"]` across every `.lattice` on the page,
+   * so any one grid with rows satisfies it. That is a different question from
+   * "did the grid this page is built around draw anything", which is the one
+   * a reader actually cares about, and which the summary grids beside it can
+   * answer for it. So this asks about that one grid, and counts only *data*
+   * rows -- the sticky totals row and the header row are `.lat-row` too, and
+   * carry no `data-index`.
+   */
+  const mainGrid = await evaluate(`(() => {
+    const host = document.querySelector('.primary-host') || document.querySelector('.tabs-host');
+    const root = host && host.querySelector('.lattice');
+    const viewport = root && root.querySelector('.lat-body-viewport');
+    if (!root) return { found: false };
+    return {
+      found: true,
+      dataRows: viewport ? viewport.querySelectorAll('.lat-row[data-index]').length : 0,
+      anyRows: viewport ? viewport.querySelectorAll('.lat-row').length : 0,
+      bodyCells: viewport ? viewport.querySelectorAll('[role="gridcell"]').length : 0,
+      columnHeaders: root.querySelectorAll('[role="columnheader"]').length,
+      viewportHeight: viewport ? Math.round(viewport.getBoundingClientRect().height) : 0,
+    };
+  })()`);
+  console.log(`  main grid: ${mainGrid.dataRows} data rows, ${mainGrid.bodyCells} body cells, `
+    + `${mainGrid.columnHeaders} column headers, body ${mainGrid.viewportHeight}px tall`);
+
+  check(mainGrid.found, 'saved copy: the main grid exists');
+  check(mainGrid.dataRows > 0, 'saved copy: the main grid painted at least one data row',
+    `${mainGrid.dataRows} data rows in a body ${mainGrid.viewportHeight}px tall`);
+  check(mainGrid.bodyCells > 0, 'saved copy: the main grid painted cells', `${mainGrid.bodyCells}`);
+  check(mainGrid.columnHeaders > 0, 'saved copy: the main grid drew a column header row',
+    `${mainGrid.columnHeaders}`);
+
   noErrors('saved copy');
   await shoot('01-grid-saved');
 
@@ -541,6 +578,54 @@ try {
   console.log(`  pushed trip: rows ${push.before} -> ${push.after}, trips tile ${push.beforeTrips} -> ${push.afterTrips}`);
   check(push.after === push.before + 1, 'a pushed trip adds one row to the detail grid', `${push.before} -> ${push.after}`);
   check(toNum(push.afterTrips) === toNum(push.beforeTrips) + 1, 'the pushed trip moves the trips tile', `${push.beforeTrips} -> ${push.afterTrips}`);
+
+  /* ------------------------------------------------------------------ */
+  /* On a phone.                                                         */
+  /* ------------------------------------------------------------------ */
+
+  /*
+   * A dashboard laid out across can leave one element wider than the screen,
+   * and the whole page then scrolls sideways -- which on a phone is the first
+   * thing a reader meets. Loaded narrow, nothing may stick out, and the grid
+   * this page is built around must still draw rows.
+   */
+  await call('Emulation.setDeviceMetricsOverride', { width: 400, height: 900, deviceScaleFactor: 1, mobile: true });
+  await open(`${origin}/index.html?source=snapshot`, 'saved copy, 400px wide');
+
+  const narrow = await evaluate(`(() => {
+    const de = document.documentElement;
+    const host = document.querySelector('.primary-host') || document.querySelector('.tabs-host');
+    const root = host && host.querySelector('.lattice');
+    const viewport = root && root.querySelector('.lat-body-viewport');
+    const widest = [];
+    const clipped = (e) => getComputedStyle(e).overflowX !== 'visible';
+    const walk = (e) => {
+      for (const child of e.children) {
+        const box = child.getBoundingClientRect();
+        if (box.width === 0 && box.height === 0) continue;
+        if (box.right > de.clientWidth + 1) {
+          widest.push(String(child.className || child.tagName).slice(0, 40) + ' @' + Math.round(box.right));
+        }
+        if (!clipped(child)) walk(child);
+      }
+    };
+    walk(document.body);
+    return {
+      clientWidth: de.clientWidth,
+      scrollWidth: de.scrollWidth,
+      dataRows: viewport ? viewport.querySelectorAll('.lat-row[data-index]').length : 0,
+      sticking: widest.slice(0, 5),
+    };
+  })()`);
+  console.log(`  at 400px: scrollWidth ${narrow.scrollWidth} vs clientWidth ${narrow.clientWidth}, `
+    + `${narrow.dataRows} data rows in the main grid`);
+  if (narrow.sticking.length) console.log(`  sticking out: ${narrow.sticking.join(', ')}`);
+
+  check(narrow.scrollWidth <= narrow.clientWidth, 'at 400px: the page does not scroll sideways',
+    `scrollWidth ${narrow.scrollWidth} > clientWidth ${narrow.clientWidth}; ${narrow.sticking.join(', ')}`);
+  check(narrow.dataRows > 0, 'at 400px: the main grid still paints data rows', `${narrow.dataRows}`);
+
+  await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
   noErrors('saved copy, after the checks');
 

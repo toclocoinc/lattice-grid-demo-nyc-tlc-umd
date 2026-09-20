@@ -577,11 +577,15 @@
     const detailConfig = {
       ...baseGridConfig('Taxi trips published by the NYC Taxi & Limousine Commission'),
       columns: tripColumns(fareMax, tipMax),
-      /* The same grid can be drawn as a pivot: group the rows down the left
-         gutter and pivot the payment across the top, and it becomes a matrix of
-         summed fares and counts. It stays an ordinary table until a pivot
-         dimension is set. */
-      pivotView: true,
+      /* The same grid can be drawn two ways. As built it is a table of the
+         individual trips; the Pivot buttons below switch it to a matrix —
+         the rows grouped down the left gutter, the payment across the top,
+         each cell a summed fare — and switch it back again.
+
+         The matrix is a presentation that replaces the table rather than a
+         layer over it, so it is turned on at the moment a pivot dimension is
+         chosen and off again when one is not. Turned on with no dimension to
+         draw there is nothing for the matrix to show. */
     };
     if (source) detailConfig.source = source;
     else detailConfig.rows = rows;
@@ -644,7 +648,9 @@
       }
     };
 
-    addTile('trips', { title: 'Trips', value: { fn: 'count' } });
+    /* A count has no column to take its formatting from, so it says how it
+       wants to be read: the same thousands separators as the money beside it. */
+    addTile('trips', { title: 'Trips', value: { fn: 'count' }, format: (v) => commas(v) });
     addTile('totalFare', {
       title: 'Total fares',
       value: { of: 'fare', fn: 'sum' },
@@ -741,8 +747,28 @@
       return node;
     };
 
+    /*
+     * The matrix and the table are two presentations of the one grid, and only
+     * one of them draws at a time. `pivotView` is what chooses between them, so
+     * every control that changes the shape of the grid says which it wants:
+     * grouping alone is a tree of trips and stays a table, a pivot dimension is
+     * a matrix, and clearing the pivot returns to the table.
+     */
+    const asTable = () => {
+      detailGrid.columns.pivot([]);
+      detailGrid.set('pivotView', false);
+    };
+
+    const asMatrix = (groupIds, pivotIds) => {
+      detailGrid.set('pivotView', true);
+      detailGrid.columns.group(groupIds);
+      detailGrid.columns.pivot(pivotIds);
+    };
+
     const group = (ids) => () => {
-      if (detailGrid) detailGrid.columns.group(ids);
+      if (!detailGrid) return;
+      asTable();
+      detailGrid.columns.group(ids);
     };
 
     actions.append(el('span', 'actions-label', 'Group by'));
@@ -754,20 +780,14 @@
     actions.append(el('span', 'actions-gap'));
     actions.append(el('span', 'actions-label', 'Pivot'));
     actions.append(
-      button('Payment across the hour', () => {
-        detailGrid.columns.group(['hour']);
-        detailGrid.columns.pivot(['paymentLabel']);
-      }),
+      button('Payment across the hour', () => asMatrix(['hour'], ['paymentLabel'])),
     );
     actions.append(
-      button('Trip type across the zone', () => {
-        detailGrid.columns.group(['pickupZone']);
-        detailGrid.columns.pivot(['tripType']);
-      }),
+      button('Trip type across the zone', () => asMatrix(['pickupZone'], ['tripType'])),
     );
     actions.append(
       button('No pivot', () => {
-        detailGrid.columns.pivot([]);
+        asTable();
         detailGrid.columns.group([]);
       }),
     );

@@ -28,11 +28,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * The page is read down, not fitted to the fold. This column holds a
+ * masthead, five figures, six charts, a table and a set of summaries: more
+ * than a screen's worth, so it is given a screen as its minimum and allowed
+ * to grow past it. Pinned to exactly the viewport's height instead, the
+ * items share out less room than they ask for and each one is squeezed.
+ */
 #app {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
+  min-height: 100%;
   padding: 16px 20px 12px;
 }
 
@@ -64,8 +71,13 @@ body {
   align-items: center;
   color: var(--ink-soft);
   display: flex;
+  flex-wrap: wrap;
   font-size: 12px;
   gap: 10px;
+  /* The provenance line carries a whole sentence about where the data came
+     from and when. Left unbreakable it sets the width of the masthead, and on
+     a phone that one line pushed the whole page sideways. It wraps instead. */
+  min-width: 0;
 }
 
 .pill {
@@ -97,7 +109,8 @@ body {
 }
 
 .freshness {
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .freshness.failed {
@@ -121,9 +134,19 @@ body {
   padding: 12px 14px;
 }
 
+/*
+ * The wrapper above is the card, so the tile inside it draws no chrome of its
+ * own -- with one exception the grid keeps: a tile carrying a status band
+ * draws it down the inline-start edge, and that band is more specific than
+ * this rule. Give it room, or it sits under the first character of the label.
+ */
 .kpi-tile .lat-stat {
   border: 0;
   padding: 0;
+}
+
+.kpi-tile .lat-stat[data-tone] {
+  padding-inline-start: 9px;
 }
 
 .kpi-error {
@@ -213,8 +236,10 @@ body {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
-  flex: 1 1 55%;
-  min-height: 260px;
+  /* A height of its own, so the table is as tall as it needs to be to be
+     worth looking at rather than whatever is left over. */
+  flex: 0 0 auto;
+  height: 520px;
   overflow: hidden;
 }
 
@@ -228,9 +253,10 @@ body {
   border: 1px solid var(--line);
   border-radius: 10px;
   display: flex;
-  flex: 1 1 45%;
+  /* The basis, not `height`: this is a flex item in a column, and the tabs
+     module injects a rule of its own for the height at runtime. */
+  flex: 0 0 420px;
   flex-direction: column;
-  min-height: 220px;
   overflow: hidden;
   padding: 10px 12px 12px;
 }
@@ -305,4 +331,57 @@ body {
   color: #6b4d12;
   margin: 8px 0 0;
   padding: 6px 10px;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* One column on a phone                                               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Below this width the page stops being a dashboard laid out across and
+ * becomes a single column read down. Every multi-column strip folds to one
+ * track, the charts get a height of their own instead of sharing a row's,
+ * and nothing is allowed to set a width the screen has to scroll to reach.
+ *
+ * The KPI panel sizes its own tracks from `--lat-kpi-tile-min`, which
+ * `columns: 4` sets as an inline style on the panel; `!important` is what
+ * lets a stylesheet have the last word over that inline value, so the four
+ * columns asked for on a desktop become one here rather than four tiles too
+ * narrow to read.
+ */
+@media (max-width: 640px) {
+  #app {
+    padding: 12px 12px 10px;
+  }
+
+  .head h1 {
+    font-size: 19px;
+  }
+
+  .kpi-strip,
+  .chart-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-wrap {
+    grid-template-rows: none;
+  }
+
+  .chart-box {
+    height: 240px;
+  }
+
+  .primary-host {
+    flex: 0 0 auto;
+    height: 460px;
+  }
+
+  .tabs-host {
+    flex: 0 0 420px;
+  }
+
+  .kpi-panel.lat-kpi {
+    --lat-kpi-tile-min: 100% !important;
+  }
 }
