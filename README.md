@@ -29,13 +29,13 @@ the browser, driving SQL pushdown over the same Parquet through the grid's
 Six tags in `index.html`, and that is the whole of the library setup:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/lattice-grid.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/lattice-grid.min.css">
 
-<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/lattice-grid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/modules/charts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/modules/data-router.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/modules/kpi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.65.0/modules/tabs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/lattice-grid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/modules/charts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/modules/data-router.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/modules/kpi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toclocoinc/lattice-grid@1.66.0/modules/tabs.min.js"></script>
 ```
 
 Each file is the package's UMD build (`*.min.js`, beside the `*.esm.min.js`
@@ -55,7 +55,7 @@ self-contained and can go in any order. `main.js` checks that every factory it
 needs is actually there before it draws anything, so a tag that did not load
 is reported as a sentence rather than as an error from inside the grid.
 
-Every address names the exact release, `1.65.0`, and every tag carries the
+Every address names the exact release, `1.66.0`, and every tag carries the
 `integrity` hash of the file it expects. The page cannot quietly pick up a
 different build than the one it was checked against, and the browser refuses
 a file that does not match. The hashes are the SHA-384 of the published files.
