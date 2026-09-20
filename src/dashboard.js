@@ -131,6 +131,30 @@
             filter: { type: 'date' },
             layout: { width: 110 },
           },
+          /*
+           * The hour and the weekday a trip was picked up in. Both are carried
+           * on every row, and both are what the charts below and the Group by
+           * buttons categorise trips by -- and a chart's `x` names a *column*,
+           * not a field, so they have to be declared here for anything to read
+           * them. They are hidden, like `count`: the "Picked up" cell already
+           * says the day and the time in words, so a reader has them, and a
+           * column of nothing but "17" would earn no room in the table.
+           */
+          {
+            id: 'hour',
+            field: 'hour',
+            title: 'Hour of day',
+            type: 'number',
+            filter: { type: 'number' },
+            layout: { width: 90, hidden: true },
+          },
+          {
+            id: 'dayName',
+            field: 'dayName',
+            title: 'Day of week',
+            filter: { type: 'set' },
+            layout: { width: 110, hidden: true },
+          },
           {
             id: 'passengers',
             field: 'passengers',

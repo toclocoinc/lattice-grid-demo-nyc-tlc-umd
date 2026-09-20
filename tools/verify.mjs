@@ -369,6 +369,29 @@ try {
     check(c.marks > 2, `saved copy: chart ${c.i} drew marks`, `${c.marks} marks`);
     check(c.size > 20, `saved copy: chart ${c.i} has data rather than empty axes`, `${c.size} bytes`);
   }
+  /*
+   * How many categories each chart actually plotted.
+   *
+   * "It drew marks" and "its data is not empty" are both true of a chart that
+   * has put every single row into one unnamed bucket: the axis lines are
+   * marks, and one point carrying twenty-seven thousand values is a lot of
+   * JSON. A chart's `x` names a *column*, and a column the grid does not have
+   * categorises nothing, so the figure that settles it is the number of points
+   * in the series.
+   */
+  const categories = await evaluate(`(() => window.__nycTlc.charts.map((c, i) => {
+    const data = c.data();
+    const series = Array.isArray(data) ? data : (data && data.series) || [];
+    const points = series.length && series[0].points ? series[0].points : [];
+    return { i, series: series.length, points: points.length,
+             first: points.length ? String(points[0].label ?? points[0].xKey ?? '') : null };
+  }))()`);
+  for (const c of categories) {
+    console.log(`  chart ${c.i}: ${c.series} series, ${c.points} categories, first "${c.first}"`);
+    check(c.points > 1, `saved copy: chart ${c.i} plots more than one category`,
+      `${c.points} point(s), first "${c.first}"`);
+  }
+
   check(snap.watermark === false, 'saved copy: no watermark on localhost', `state ${snap.licenceState}`);
   /* ------------------------------------------------------------------ */
   /* The main grid, specifically.                                        */
