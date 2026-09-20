@@ -473,6 +473,44 @@ try {
   check(shadowText.bad.length === 0, 'saved copy: the computed columns render numbers, not NaN',
     shadowText.bad.join('; '));
 
+  /*
+   * The reversals.
+   *
+   * A disputed, voided or refunded trip is recorded by the TLC as a negative
+   * fare, and those rows are kept rather than filtered away -- they are real
+   * records, and hiding them would make the totals disagree with the source.
+   * Every payment code is named, so a reversal says which kind it was; a
+   * regression that collapsed the codes back into one bucket, or that dropped
+   * the negative rows, would fail here.
+   */
+  const reversals = await evaluate(`(() => {
+    const g = window.__nycTlc.detailGrid;
+    const names = new Set();
+    let negative = 0;
+    let onReversal = 0;
+    const reversalNames = ['No charge', 'Dispute', 'Unknown', 'Voided trip'];
+    g.rows.forEach((row) => {
+      const fare = g.rows.value(row.key, 'fare');
+      const pay = g.rows.value(row.key, 'paymentLabel');
+      if (pay != null) names.add(String(pay));
+      if (typeof fare === 'number' && fare < 0) {
+        negative += 1;
+        if (reversalNames.includes(String(pay))) onReversal += 1;
+      }
+    });
+    return { negative, onReversal, names: [...names].sort() };
+  })()`);
+  console.log(`  payment types on the page: ${reversals.names.join(', ')}`);
+  console.log(`  negative fares: ${reversals.negative}, of which ${reversals.onReversal} on a reversal type`);
+
+  check(reversals.negative > 0, 'saved copy: the reversals are still in the table',
+    `${reversals.negative} negative fare(s)`);
+  check(reversals.onReversal > 0,
+    'saved copy: a negative fare carries a reversal payment type, not a catch-all',
+    `${reversals.onReversal} of ${reversals.negative}`);
+  check(!reversals.names.includes('Other'),
+    'saved copy: no payment is left in an "Other" bucket', reversals.names.join(', '));
+
   noErrors('saved copy');
   await shoot('01-grid-saved');
 

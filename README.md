@@ -146,7 +146,10 @@ knowing about the data:
   twenty-fifth trip in pickup order, so every day, hour and zone keeps its
   real proportions while the file stays a few megabytes.
 - Payment type is a code: 1 is card, 2 is cash, and the rest (no charge,
-  dispute, unknown, voided trip) are grouped as "Other" on the page.
+  dispute, unknown, voided trip) are named individually on the page. The
+  reversals are where the negative fares are: a disputed, voided or refunded
+  trip is recorded by the TLC as a negative amount, and those rows are kept
+  rather than filtered out.
 - The trip type is the TLC rate code: Standard, JFK airport, Newark,
   Nassau/Westchester, Negotiated fare and Group ride.
 - A few trips carry a negative fare. These are adjustments and voided trips the

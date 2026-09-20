@@ -130,7 +130,13 @@ SELECT
   CAST(hour(t.tpep_pickup_datetime) AS INTEGER) AS hour,
   COALESCE(pu.Zone, 'Zone ' || CAST(t.PULocationID AS VARCHAR)) AS pickupZone,
   COALESCE(dz.Zone, 'Zone ' || CAST(t.DOLocationID AS VARCHAR)) AS dropoffZone,
-  CASE t.payment_type WHEN 1 THEN 'Card' WHEN 2 THEN 'Cash' ELSE 'Other' END AS paymentLabel,
+  -- Every payment code the TLC publishes, by its own name. Collapsing 3 to 6
+  -- into one "Other" bucket hid what the reversals were: a refund, a disputed
+  -- fare and a voided trip are different events, and they are where the
+  -- negative fares live.
+  CASE t.payment_type WHEN 1 THEN 'Card' WHEN 2 THEN 'Cash' WHEN 3 THEN 'No charge'
+    WHEN 4 THEN 'Dispute' WHEN 5 THEN 'Unknown' WHEN 6 THEN 'Voided trip'
+    ELSE 'Unknown' END AS paymentLabel,
   CASE t.RatecodeID WHEN 1 THEN 'Standard' WHEN 2 THEN 'JFK airport' WHEN 3 THEN 'Newark'
     WHEN 4 THEN 'Nassau/Westchester' WHEN 5 THEN 'Negotiated fare' WHEN 6 THEN 'Group ride' ELSE 'Other' END AS tripType,
   CAST(t.passenger_count AS INTEGER) AS passengers,

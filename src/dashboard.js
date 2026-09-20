@@ -720,6 +720,8 @@
         y: 'fare',
         buckets: 28,
         title: 'What fares were charged',
+        footnote: 'Negative fares are reversals: disputed, voided or refunded trips, '
+          + 'which the TLC records as negative amounts.',
         axis: { x: 'Fare', y: 'Trips' },
         legend: false,
       },
@@ -728,7 +730,10 @@
         x: 'paymentLabel',
         y: { col: 'fare', fn: 'avg' },
         title: 'Average fare by payment type',
-        axis: { x: { labels: true }, y: 'Average fare' },
+        /* Five payment types rather than three, now that the reversals are
+           named: the labels are short and the axis rotates them when the box
+           is narrow, so they stay legible without being grouped back up. */
+        axis: { x: { labels: true, rotate: 'auto' }, y: 'Average fare' },
         legend: false,
       },
       {
