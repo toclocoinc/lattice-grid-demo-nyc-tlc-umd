@@ -1,0 +1,31 @@
+{
+  "fetchedAt": "2026-09-20T06:32:45.086Z",
+  "fetchedAtMs": 1789885965086,
+  "seconds": 2.2,
+  "rows": 27073,
+  "sampleEvery": 25,
+  "monthRows": 676839,
+  "sliceStart": "2024-01-08",
+  "sliceEnd": "2024-01-15",
+  "source": "NYC Taxi & Limousine Commission yellow taxi trip records (one week, deterministically sampled)",
+  "sourceUrl": "https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page",
+  "apiUrl": "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet",
+  "licence": "TLC trip record data, published for public use",
+  "columns": [
+    "id",
+    "pickupTime",
+    "date",
+    "dayName",
+    "dayOfWeek",
+    "hour",
+    "pickupZone",
+    "dropoffZone",
+    "paymentLabel",
+    "tripType",
+    "passengers",
+    "distance",
+    "fare",
+    "tip",
+    "total"
+  ]
+}
