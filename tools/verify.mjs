@@ -443,6 +443,36 @@ try {
   console.log(`  tool rails on the page: ${rails}`);
   check(rails === 0, 'saved copy: no grid shows the right-hand tool rail', `${rails} rail(s)`);
 
+  /*
+   * The computed columns, as text.
+   *
+   * A shadow column can hold a perfectly good number and still show nothing a
+   * reader can use: the kernel's value and the text in the cell are two
+   * different things, and a column whose `format` the grid cannot apply falls
+   * through to "NaN". So this reads the formatted text the way the table
+   * draws it, over a slice of rows, and refuses any that is not a number.
+   */
+  const shadowText = await evaluate(`(() => {
+    const g = window.__nycTlc.detailGrid;
+    const ids = ['rank', 'percentile', 'share'];
+    const bad = [];
+    let seen = 0;
+    let first = {};
+    g.rows.forEach((row, i) => {
+      if (i >= 200) return;
+      for (const id of ids) {
+        const text = String(g.rows.text(row.key, id) ?? '');
+        if (i === 0) first[id] = text;
+        seen += 1;
+        if (text === '' || /nan|undefined|null/i.test(text)) bad.push(id + ' = ' + JSON.stringify(text));
+      }
+    });
+    return { seen, first, bad: bad.slice(0, 4) };
+  })()`);
+  console.log(`  computed columns over 200 rows: ${shadowText.seen} cells, first row ${JSON.stringify(shadowText.first)}`);
+  check(shadowText.bad.length === 0, 'saved copy: the computed columns render numbers, not NaN',
+    shadowText.bad.join('; '));
+
   noErrors('saved copy');
   await shoot('01-grid-saved');
 

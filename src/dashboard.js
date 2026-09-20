@@ -38,12 +38,6 @@
     return Number(value || 0).toLocaleString('en-GB');
   }
 
-  /** A share (0..1) as a percentage with one decimal. */
-  function percent(value) {
-    if (value == null || Number.isNaN(value)) return '';
-    return (value * 100).toFixed(1) + '%';
-  }
-
   /** A clock time, local to whoever is reading. */
   function clockText(ms) {
     return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -75,15 +69,6 @@
     Dispute: 'danger',
     Unknown: 'neutral',
     'Voided trip': 'neutral',
-  };
-
-  const PAYMENT_TINTS = {
-    Card: '#e7f4ea',
-    Cash: '#eef1f4',
-    'No charge': '#fdf3e3',
-    Dispute: '#fdeaea',
-    Unknown: '#eef1f4',
-    'Voided trip': '#eef1f4',
   };
 
   /** The colours each trip type (rate code) is rendered with. */
@@ -278,7 +263,9 @@
             shadow: { kind: 'percentile' },
             title: 'Percentile',
             type: 'number',
-            format: percent,
+            /* The kernel reports a percentile as 0..100 already, so this is a
+               plain number with a percent sign after it, not a ratio. */
+            format: { type: 'number', decimals: 1, suffix: '%' },
             layout: { width: 100 },
           },
           {
@@ -287,7 +274,9 @@
             shadow: { kind: 'shareOfTotal' },
             title: 'Share of fares',
             type: 'number',
-            format: percent,
+            /* A share of the total is a ratio between 0 and 1; `style: 'percent'`
+               is what turns it into a percentage. */
+            format: { type: 'number', style: 'percent', decimals: 2 },
             layout: { width: 110 },
           },
         ],
@@ -304,14 +293,14 @@
    * @returns {object} rules keyed by column id
    */
   function formattingRules() {
-    const paymentRules = Object.keys(PAYMENT_TINTS).map((label) => ({
-      id: `payment-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-      label,
-      when: { op: 'eq', value: label },
-      style: { background: PAYMENT_TINTS[label] },
-    }));
+    /*
+     * The payment type is drawn as a coloured pill, so tinting the cell behind
+     * it said the same thing twice in two different ways -- and the tint is
+     * the weaker of the two, because a wash of colour has to be learned before
+     * it means anything. The pill stays; the rules the reader can edit are the
+     * ones about money, where the value itself carries no other signal.
+     */
     return {
-      paymentLabel: paymentRules,
       fare: [
         {
           id: 'fare-cheap',

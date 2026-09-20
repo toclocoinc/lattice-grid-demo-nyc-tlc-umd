@@ -145,8 +145,30 @@ body {
   padding: 0;
 }
 
+/*
+ * A tile carrying a status band is still one card.
+ *
+ * The grid draws that band down the inline-start edge of the stat it renders,
+ * which sits inside this wrapper -- so the band, with the stat's own rounded
+ * corners, read as a second card edge inset within the first, on the one tile
+ * that had a band and on none of its neighbours. The band belongs to the card
+ * a reader sees, so the wrapper takes it and the inner edge is turned off.
+ */
 .kpi-tile .lat-stat[data-tone] {
-  padding-inline-start: 9px;
+  border-inline-start-width: 0;
+  padding-inline-start: 0;
+}
+
+.kpi-tile:has(.lat-stat[data-tone='good']) {
+  border-left: 3px solid var(--live);
+}
+
+.kpi-tile:has(.lat-stat[data-tone='warn']) {
+  border-left: 3px solid #d97706;
+}
+
+.kpi-tile:has(.lat-stat[data-tone='bad']) {
+  border-left: 3px solid var(--alarm);
 }
 
 .kpi-error {
