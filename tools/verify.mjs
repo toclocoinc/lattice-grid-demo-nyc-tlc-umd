@@ -430,6 +430,19 @@ try {
   check(mainGrid.columnHeaders > 0, 'saved copy: the main grid drew a column header row',
     `${mainGrid.columnHeaders}`);
 
+  /*
+   * The right-hand tool rail is off on every grid this page builds. It is a
+   * developer's control surface, not part of the story a reader came for, and
+   * it takes a strip off the side of every table. `toolPanel` is off by
+   * default, so this asks that nothing has turned it back on -- in the shared
+   * base config, or on any one grid.
+   */
+  const rails = await evaluate(
+    `document.querySelectorAll('.lat-panel-dock').length`,
+  );
+  console.log(`  tool rails on the page: ${rails}`);
+  check(rails === 0, 'saved copy: no grid shows the right-hand tool rail', `${rails} rail(s)`);
+
   noErrors('saved copy');
   await shoot('01-grid-saved');
 

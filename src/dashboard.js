@@ -344,7 +344,6 @@
       grandTotalRow: 'bottom',
       groupDefaultExpanded: 0,
       pivot: { groupTotals: 'after' },
-      toolPanel: { side: 'right', panels: ['filters', 'columns', 'formatting'] },
       selection: 'multiple',
       title,
     };
